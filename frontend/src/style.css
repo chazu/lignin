@@ -1,0 +1,84 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #1b2636;
+  color: #e0e0e0;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+#lignin-app {
+  display: grid;
+  grid-template-rows: 1fr 1fr 28px;
+  width: 100%;
+  height: 100%;
+}
+
+#viewport {
+  background: #2a3a4a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #3a4a5a;
+  overflow: hidden;
+}
+
+#viewport-placeholder {
+  color: #6a7a8a;
+  font-size: 14px;
+}
+
+#editor {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#source {
+  width: 100%;
+  height: 100%;
+  background: #1e1e2e;
+  color: #cdd6f4;
+  border: none;
+  padding: 12px;
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+}
+
+#source::placeholder {
+  color: #585b70;
+}
+
+#status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: #181825;
+  border-top: 1px solid #313244;
+  font-size: 12px;
+  color: #a6adc8;
+}
+
+#status-text.error {
+  color: #f38ba8;
+}
+
+#mesh-count {
+  color: #89b4fa;
+}

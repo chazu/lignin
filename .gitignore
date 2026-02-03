@@ -6,7 +6,7 @@ lignin
 *.dll
 
 # Build artifacts
-/build/
+/build/bin/
 /dist/
 
 # Wails (added in Phase 3)
