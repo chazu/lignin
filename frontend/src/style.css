@@ -20,35 +20,35 @@ html, body {
 
 #lignin-app {
   display: grid;
-  grid-template-rows: 1fr 1fr 28px;
+  grid-template-rows: 1fr 4px 1fr 28px;
   width: 100%;
   height: 100%;
 }
 
 #viewport {
   background: #2a3a4a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #3a4a5a;
   overflow: hidden;
+  position: relative;
+  min-height: 0;
 }
 
-#viewport-placeholder {
-  color: #6a7a8a;
-  font-size: 14px;
+#divider {
+  background: #3a4a5a;
+  cursor: row-resize;
+  transition: background 0.15s ease;
+  z-index: 20;
 }
 
-#editor {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+#divider:hover,
+#divider.active {
+  background: #89b4fa;
 }
 
 #editor-container {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  min-height: 0;
 }
 
 #editor-container .cm-editor {
@@ -76,4 +76,8 @@ html, body {
 
 #mesh-count {
   color: #89b4fa;
+}
+
+#file-state {
+  color: #6c7086;
 }
