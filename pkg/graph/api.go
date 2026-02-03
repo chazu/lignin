@@ -212,24 +212,43 @@ func (gb *GraphBuilder) CreatePartNode(name string, solidNodes []NodeID, metadat
 
 // CreateJoinNode creates a join operation node.
 func (gb *GraphBuilder) CreateJoinNode(joinType JoinType, spec JoinSpec, dependencies []NodeID) NodeID {
-	nodeID := generateNodeID("join", string(joinType), spec)
+	joinTypeStr := joinTypeToString(joinType)
+	nodeID := generateNodeID("join", joinTypeStr, spec)
 	node := &Node{
 		ID:           nodeID,
 		Type:         NodeTypeJoin,
 		Dependencies: dependencies,
-		SourceExpr:   fmt.Sprintf("(%s-join ...)", joinType),
+		SourceExpr:   fmt.Sprintf("(%s-join ...)", joinTypeStr),
 		Properties: map[string]interface{}{
 			"type": joinType,
 			"spec": spec,
 		},
 		Metadata: NodeMetadata{
 			CreatedAt: time.Now(),
-			Tags:      []string{"join", fmt.Sprintf("%v", joinType)},
+			Tags:      []string{"join", joinTypeStr},
 		},
 	}
 
 	gb.AddNode(node)
 	return nodeID
+}
+
+// joinTypeToString converts a JoinType to its string representation.
+func joinTypeToString(joinType JoinType) string {
+	switch joinType {
+	case JoinTypeButt:
+		return "butt"
+	case JoinTypeHole:
+		return "hole"
+	case JoinTypeFastener:
+		return "fastener"
+	case JoinTypeDovetail:
+		return "dovetail"
+	case JoinTypeMortiseTenon:
+		return "mortise-tenon"
+	default:
+		return "unknown"
+	}
 }
 
 // Build returns the completed graph and part registry.
