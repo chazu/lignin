@@ -64,8 +64,15 @@ func preprocessSource(source string) string {
 			}
 			continue
 		}
-		// Skip line comments (; to end of line).
+		// Convert ; line comments to // comments for zygomys.
+		// zygomys uses // for line comments, not the traditional Lisp ;.
 		if b[i] == ';' {
+			result = append(result, '/', '/')
+			i++
+			// Skip additional ; characters (;; style).
+			for i < len(b) && b[i] == ';' {
+				i++
+			}
 			for i < len(b) && b[i] != '\n' {
 				result = append(result, b[i])
 				i++

@@ -65,16 +65,29 @@ func Tessellate(g *graph.DesignGraph, k kernel.Kernel) ([]*kernel.Mesh, error) {
 	var meshes []*kernel.Mesh
 	ts := newTransformStack()
 
-	for _, rootID := range g.Roots {
-		root := g.Get(rootID)
-		if root == nil {
-			continue
+	if len(g.Roots) > 0 {
+		// Walk from declared roots (assemblies).
+		for _, rootID := range g.Roots {
+			root := g.Get(rootID)
+			if root == nil {
+				continue
+			}
+			collected, err := walkNode(g, k, root, ts)
+			if err != nil {
+				return nil, fmt.Errorf("tessellate: error walking root %s: %w", rootID.Short(), err)
+			}
+			meshes = append(meshes, collected...)
 		}
-		collected, err := walkNode(g, k, root, ts)
-		if err != nil {
-			return nil, fmt.Errorf("tessellate: error walking root %s: %w", rootID.Short(), err)
+	} else {
+		// No roots declared: tessellate all primitive nodes directly.
+		// This handles standalone defparts without an assembly wrapper.
+		for _, n := range g.Parts() {
+			collected, err := walkNode(g, k, n, ts)
+			if err != nil {
+				return nil, fmt.Errorf("tessellate: error walking part %s: %w", n.ID.Short(), err)
+			}
+			meshes = append(meshes, collected...)
 		}
-		meshes = append(meshes, collected...)
 	}
 
 	return meshes, nil

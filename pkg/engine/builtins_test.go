@@ -47,9 +47,14 @@ func TestPreprocessKeywords(t *testing.T) {
 			expect: `(- 10 5)`,
 		},
 		{
-			name:   "comment preserved",
+			name:   "comment converted to // style",
 			input:  `;; comment with :keyword`,
-			expect: `;; comment with :keyword`,
+			expect: `// comment with :keyword`,
+		},
+		{
+			name:   "single semicolon comment",
+			input:  `; simple comment`,
+			expect: `// simple comment`,
 		},
 		{
 			name:   "hyphen in keyword preserved",

@@ -9,8 +9,54 @@ import type { EditorView } from '@codemirror/view';
 // Default source
 // ---------------------------------------------------------------------------
 
-const DEFAULT_SOURCE = `(defpart "shelf"
-  (board :length 600 :width 300 :thickness 18 :grain :x))`;
+const DEFAULT_SOURCE = `;; Open-top box -- 5 boards with butt joints
+;; Outer: 400 wide x 300 deep x 200 tall (mm)
+
+(def thickness 19)
+(def oak (material :species "white-oak"))
+
+(defpart "front"
+  (board :length 400 :width 200 :thickness thickness
+         :grain :x :material oak))
+
+(defpart "back"
+  (board :length 400 :width 200 :thickness thickness
+         :grain :x :material oak))
+
+(defpart "left"
+  (board :length 262 :width 200 :thickness thickness
+         :grain :x :material oak))
+
+(defpart "right"
+  (board :length 262 :width 200 :thickness thickness
+         :grain :x :material oak))
+
+(defpart "bottom"
+  (board :length 362 :width 262 :thickness thickness
+         :grain :x :material oak))
+
+(assembly "box"
+  (place (part "front")  :at (vec3 0 0 0))
+  (place (part "back")   :at (vec3 0 0 281))
+  (place (part "left")   :at (vec3 0 0 19))
+  (place (part "right")  :at (vec3 381 0 19))
+  (place (part "bottom") :at (vec3 19 0 19))
+
+  (butt-joint
+    :part-a (part "front") :face-a :left
+    :part-b (part "left")  :face-b :front
+    :fasteners
+      (list
+        (screw :diameter 4 :length 50 :position (vec3 0 50 0))
+        (screw :diameter 4 :length 50 :position (vec3 0 150 0))))
+
+  (butt-joint
+    :part-a (part "front") :face-a :right
+    :part-b (part "right") :face-b :front
+    :fasteners
+      (list
+        (screw :diameter 4 :length 50 :position (vec3 0 50 0))
+        (screw :diameter 4 :length 50 :position (vec3 0 150 0)))))`;
 
 // ---------------------------------------------------------------------------
 // DOM structure
