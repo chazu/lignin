@@ -3,6 +3,7 @@ package graph
 
 import (
 	"fmt"
+	"time"
 )
 
 // PartRegistry manages part definitions and references.
