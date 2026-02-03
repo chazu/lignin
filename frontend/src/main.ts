@@ -1,5 +1,9 @@
 import './style.css';
-import {Evaluate} from '../wailsjs/go/main/App';
+import { Evaluate } from '../wailsjs/go/main/App';
+import { createEditor, setErrors } from './editor/editor';
+
+const DEFAULT_SOURCE = `(defpart "shelf"
+  (board :length 600 :width 300 :thickness 18 :grain :x))`;
 
 document.querySelector('#app')!.innerHTML = `
   <div id="lignin-app">
@@ -7,8 +11,7 @@ document.querySelector('#app')!.innerHTML = `
       <div id="viewport-placeholder">3D Viewport (Three.js — Phase 3)</div>
     </div>
     <div id="editor">
-      <textarea id="source" spellcheck="false" placeholder="Enter Lignin Lisp code...">(defpart "shelf"
-  (board :length 600 :width 300 :thickness 18 :grain :x))</textarea>
+      <div id="editor-container"></div>
     </div>
     <div id="status-bar">
       <span id="status-text">Ready</span>
@@ -17,24 +20,33 @@ document.querySelector('#app')!.innerHTML = `
   </div>
 `;
 
-const sourceEl = document.getElementById('source') as HTMLTextAreaElement;
 const statusEl = document.getElementById('status-text')!;
 const meshCountEl = document.getElementById('mesh-count')!;
+const editorContainer = document.getElementById('editor-container')!;
 
 let debounceTimer: number | undefined;
 
-function evaluate() {
-  const source = sourceEl.value;
+function evaluate(source: string) {
   statusEl.textContent = 'Evaluating...';
 
   Evaluate(source)
     .then((result) => {
       if (result.errors && result.errors.length > 0) {
         const msgs = result.errors.map(
-          (e: any) => e.line > 0 ? `Line ${e.line}: ${e.message}` : e.message
+          (e: { line: number; message: string }) =>
+            e.line > 0 ? `Line ${e.line}: ${e.message}` : e.message,
         );
         statusEl.textContent = msgs.join('; ');
         statusEl.classList.add('error');
+
+        // Mark error lines in the gutter
+        const lineErrors = result.errors
+          .filter((e: { line: number; message: string }) => e.line > 0)
+          .map((e: { line: number; message: string }) => ({
+            line: e.line,
+            message: e.message,
+          }));
+        setErrors(view, lineErrors);
       } else {
         statusEl.classList.remove('error');
         const count = result.meshes ? result.meshes.length : 0;
@@ -50,10 +62,12 @@ function evaluate() {
     });
 }
 
-sourceEl.addEventListener('input', () => {
+function onDocChange(doc: string) {
   clearTimeout(debounceTimer);
-  debounceTimer = window.setTimeout(evaluate, 300);
-});
+  debounceTimer = window.setTimeout(() => evaluate(doc), 300);
+}
+
+const view = createEditor(editorContainer, DEFAULT_SOURCE, onDocChange);
 
 // Initial evaluation on load.
-evaluate();
+evaluate(DEFAULT_SOURCE);

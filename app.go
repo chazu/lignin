@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/chazu/lignin/pkg/engine"
 	"github.com/chazu/lignin/pkg/kernel"
 	"github.com/chazu/lignin/pkg/kernel/sdfx"
 	"github.com/chazu/lignin/pkg/tessellate"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // colorPalette is a default palette used to assign distinct colors to parts.
@@ -44,6 +46,12 @@ type EvalResult struct {
 	Meshes   []MeshData      `json:"meshes"`
 	Errors   []EvalErrorData `json:"errors"`
 	Warnings []EvalErrorData `json:"warnings"`
+}
+
+// FileResult is returned by OpenFile with the file contents and path.
+type FileResult struct {
+	Content string `json:"content"`
+	Path    string `json:"path"`
 }
 
 // NewApp creates a new App with an engine and the sdfx kernel.
@@ -119,4 +127,65 @@ func (a *App) Evaluate(source string) EvalResult {
 	}
 
 	return result
+}
+
+// ligninFileFilter is the dialog filter for .lignin files.
+var ligninFileFilter = runtime.FileFilter{
+	DisplayName: "Lignin Files (*.lignin)",
+	Pattern:     "*.lignin",
+}
+
+// OpenFile shows an open file dialog and returns the file contents + path.
+func (a *App) OpenFile() (FileResult, error) {
+	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title: "Open Lignin File",
+		Filters: []runtime.FileFilter{
+			ligninFileFilter,
+		},
+	})
+	if err != nil {
+		return FileResult{}, err
+	}
+	// User cancelled the dialog.
+	if path == "" {
+		return FileResult{}, nil
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return FileResult{}, err
+	}
+	return FileResult{
+		Content: string(data),
+		Path:    path,
+	}, nil
+}
+
+// SaveFile saves content to the given path (or shows a save dialog if path is empty).
+func (a *App) SaveFile(content string, path string) (string, error) {
+	if path == "" {
+		var err error
+		path, err = runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+			Title:           "Save Lignin File",
+			DefaultFilename: "untitled.lignin",
+			Filters: []runtime.FileFilter{
+				ligninFileFilter,
+			},
+		})
+		if err != nil {
+			return "", err
+		}
+		// User cancelled the dialog.
+		if path == "" {
+			return "", nil
+		}
+	}
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		return "", err
+	}
+	return path, nil
+}
+
+// SetTitle updates the window title.
+func (a *App) SetTitle(title string) {
+	runtime.WindowSetTitle(a.ctx, title)
 }

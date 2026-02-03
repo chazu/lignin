@@ -5,3 +5,15 @@
 export function Evaluate(arg1) {
   return window['go']['main']['App']['Evaluate'](arg1);
 }
+
+export function OpenFile() {
+  return window['go']['main']['App']['OpenFile']();
+}
+
+export function SaveFile(arg1, arg2) {
+  return window['go']['main']['App']['SaveFile'](arg1, arg2);
+}
+
+export function SetTitle(arg1) {
+  return window['go']['main']['App']['SetTitle'](arg1);
+}
