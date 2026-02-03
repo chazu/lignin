@@ -1,6 +1,6 @@
 import './style.css';
 import { Evaluate } from '../wailsjs/go/main/App';
-import { createEditor, setErrors } from './editor/editor';
+import { createEditor, setErrors, highlightLine } from './editor/editor';
 import { createViewport, type MeshData } from './viewport/viewport';
 import { createFileManager, type FileState } from './file-io';
 import type { EditorView } from '@codemirror/view';
@@ -103,7 +103,25 @@ function onDocChange(doc: string): void {
   debounceTimer = window.setTimeout(() => evaluate(doc), 300);
 }
 
-view = createEditor(editorContainer, DEFAULT_SOURCE, onDocChange);
+view = createEditor(editorContainer, DEFAULT_SOURCE, onDocChange, (partName) => {
+  // Editor cursor moved into/out of a defpart block -- highlight in viewport.
+  viewport.highlightPart(partName);
+});
+
+// ---------------------------------------------------------------------------
+// Viewport -> Editor: clicking a mesh highlights defpart in the editor
+// ---------------------------------------------------------------------------
+
+viewport.onPartSelect = (partName: string) => {
+  const doc = view.state.doc.toString();
+  // Search for (defpart "partName" in the document.
+  const needle = `(defpart "${partName}"`;
+  const idx = doc.indexOf(needle);
+  if (idx !== -1) {
+    const line = view.state.doc.lineAt(idx);
+    highlightLine(view, line.number);
+  }
+};
 
 // ---------------------------------------------------------------------------
 // File Manager

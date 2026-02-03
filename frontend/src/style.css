@@ -81,3 +81,9 @@ html, body {
 #file-state {
   color: #6c7086;
 }
+
+/* Highlight decoration when a part mesh is clicked in the viewport */
+.cm-highlighted-part-line {
+  background-color: rgba(137, 180, 250, 0.15) !important;
+  border-left: 3px solid #89b4fa;
+}

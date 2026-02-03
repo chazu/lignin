@@ -17,6 +17,10 @@ export interface Viewport {
   updateMeshes(meshes: MeshData[]): void;
   /** Show or hide a stale-data overlay on the viewport. */
   setStale(stale: boolean): void;
+  /** Visually highlight the mesh with the given partName (null to clear). */
+  highlightPart(partName: string | null): void;
+  /** Register a callback invoked when a part mesh is clicked in the viewport. */
+  onPartSelect: ((partName: string) => void) | null;
   /** Dispose of all Three.js resources. Call when the viewport is removed from the DOM. */
   dispose(): void;
 }
@@ -91,6 +95,48 @@ export function createViewport(container: HTMLElement): Viewport {
   // ---- Tracked part meshes ----
   const partMeshes: THREE.Mesh[] = [];
 
+  // ---- Part selection callback ----
+  let partSelectCallback: ((partName: string) => void) | null = null;
+
+  // ---- Raycaster for click picking ----
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  // Track pointer movement to distinguish clicks from drags.
+  let pointerDownPos = { x: 0, y: 0 };
+
+  renderer.domElement.addEventListener('pointerdown', (e: PointerEvent) => {
+    pointerDownPos = { x: e.clientX, y: e.clientY };
+  });
+
+  renderer.domElement.addEventListener('pointerup', (e: PointerEvent) => {
+    const dx = e.clientX - pointerDownPos.x;
+    const dy = e.clientY - pointerDownPos.y;
+    // Only treat as a click if the pointer moved less than 5px (not a drag/orbit).
+    if (Math.sqrt(dx * dx + dy * dy) > 5) return;
+
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(partMeshes, false);
+
+    if (intersects.length > 0) {
+      const hit = intersects[0].object;
+      const name = hit.userData.partName as string | undefined;
+      if (name) {
+        highlightPart(name);
+        if (partSelectCallback) {
+          partSelectCallback(name);
+        }
+      }
+    } else {
+      // Clicked empty space -- clear highlight.
+      highlightPart(null);
+    }
+  });
+
   // ---- Resize handling ----
   const resizeObserver = new ResizeObserver(() => {
     const w = container.clientWidth;
@@ -154,6 +200,8 @@ export function createViewport(container: HTMLElement): Viewport {
 
       const mesh = new THREE.Mesh(geometry, material);
       mesh.userData[PART_MESH_TAG] = true;
+      mesh.userData.partName = data.partName;
+      mesh.userData.baseColor = data.color;
       mesh.name = data.partName;
       scene.add(mesh);
       partMeshes.push(mesh);
@@ -195,5 +243,46 @@ export function createViewport(container: HTMLElement): Viewport {
     controls.dispose();
   }
 
-  return { updateMeshes, setStale, dispose };
+  function highlightPart(partName: string | null): void {
+
+    for (const mesh of partMeshes) {
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      const baseColor = mesh.userData.baseColor as string;
+
+      if (partName === null) {
+        // No selection -- restore all meshes to full appearance.
+        mat.color.set(baseColor);
+        mat.emissive.setHex(0x000000);
+        mat.opacity = 1.0;
+        mat.transparent = false;
+      } else if (mesh.userData.partName === partName) {
+        // Selected mesh -- boost emissive for a glow effect.
+        mat.color.set(baseColor);
+        mat.emissive.setHex(0x334455);
+        mat.opacity = 1.0;
+        mat.transparent = false;
+      } else {
+        // Unselected mesh -- dim it.
+        mat.color.set(baseColor);
+        mat.emissive.setHex(0x000000);
+        mat.opacity = 0.3;
+        mat.transparent = true;
+      }
+    }
+  }
+
+  const viewportObj: Viewport = {
+    updateMeshes,
+    setStale,
+    highlightPart,
+    get onPartSelect() {
+      return partSelectCallback;
+    },
+    set onPartSelect(cb: ((partName: string) => void) | null) {
+      partSelectCallback = cb;
+    },
+    dispose,
+  };
+
+  return viewportObj;
 }

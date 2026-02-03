@@ -36,6 +36,19 @@ func (e ValidationError) Error() string {
 	return fmt.Sprintf("[%s] node %s: %s", e.Severity, e.NodeID.Short(), e.Message)
 }
 
+// ValidationWarning describes a non-blocking advisory finding.
+type ValidationWarning struct {
+	NodeID  NodeID
+	Message string
+}
+
+// ValidationResult bundles errors (blocking) and warnings (advisory)
+// from all validation tiers.
+type ValidationResult struct {
+	Errors   []ValidationError
+	Warnings []ValidationWarning
+}
+
 // Validate runs all Tier 1 structural validation checks on the design graph
 // and returns a slice of validation errors. An empty slice means the graph is
 // valid. This function is read-only and never mutates the graph.
@@ -48,6 +61,38 @@ func Validate(g *DesignGraph) []ValidationError {
 	errs = append(errs, validateFaceIDs(g)...)
 	errs = append(errs, validateJoinParts(g)...)
 	return errs
+}
+
+// ValidateAll runs all validation tiers (structural, geometric, material)
+// and returns a ValidationResult with separated errors and warnings.
+func ValidateAll(g *DesignGraph) ValidationResult {
+	// Tier 1: structural validation (existing).
+	tier1 := Validate(g)
+
+	// Tier 2: geometric validation.
+	tier2Errs, tier2Warnings := validateGeometry(g)
+
+	// Tier 3: material warnings.
+	tier3Warnings := validateMaterial(g)
+
+	// Separate Tier 1 findings into errors and warnings.
+	var result ValidationResult
+	for _, e := range tier1 {
+		if e.Severity == SeverityWarning {
+			result.Warnings = append(result.Warnings, ValidationWarning{
+				NodeID:  e.NodeID,
+				Message: e.Message,
+			})
+		} else {
+			result.Errors = append(result.Errors, e)
+		}
+	}
+
+	result.Errors = append(result.Errors, tier2Errs...)
+	result.Warnings = append(result.Warnings, tier2Warnings...)
+	result.Warnings = append(result.Warnings, tier3Warnings...)
+
+	return result
 }
 
 // validateDAG checks for cycles using DFS with 3-color marking.

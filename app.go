@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/chazu/lignin/pkg/engine"
+	"github.com/chazu/lignin/pkg/graph"
 	"github.com/chazu/lignin/pkg/kernel"
 	"github.com/chazu/lignin/pkg/kernel/sdfx"
 	"github.com/chazu/lignin/pkg/tessellate"
@@ -100,6 +101,35 @@ func (a *App) Evaluate(source string) EvalResult {
 			})
 		}
 		return result
+	}
+
+	// Step 2.5: Run multi-tier graph validation (structural + geometric + material).
+	valResult := graph.ValidateAll(g)
+	if len(valResult.Errors) > 0 {
+		for _, e := range valResult.Errors {
+			result.Errors = append(result.Errors, EvalErrorData{
+				Line:    0,
+				Col:     0,
+				Message: e.Error(),
+			})
+		}
+		// Convert warnings even when returning early on errors.
+		for _, w := range valResult.Warnings {
+			result.Warnings = append(result.Warnings, EvalErrorData{
+				Line:    0,
+				Col:     0,
+				Message: w.Message,
+			})
+		}
+		return result
+	}
+	// No blocking errors; pass through any warnings.
+	for _, w := range valResult.Warnings {
+		result.Warnings = append(result.Warnings, EvalErrorData{
+			Line:    0,
+			Col:     0,
+			Message: w.Message,
+		})
 	}
 
 	// Step 3: Tessellate the design graph into triangle meshes.
