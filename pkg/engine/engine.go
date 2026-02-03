@@ -93,10 +93,20 @@ func (e *Engine) evaluate(source string) (*graph.DesignGraph, []EvalError, error
 		return graph.New(), nil, nil
 	}
 
+	// Create the design graph that builtins will populate.
+	g := graph.New()
+
+	// Preprocess the source to transform :keyword tokens into string literals
+	// and convert kebab-case identifiers to underscore form for zygomys.
+	source = preprocessSource(source)
+
 	// Create a fresh sandboxed zygomys environment.
 	// Sandbox mode prevents user code from accessing the filesystem or syscalls.
 	env := zygo.NewZlispSandbox()
 	defer env.Stop()
+
+	// Register DSL builtins (board, joint, assembly, etc.) that populate the graph.
+	registerBuiltins(env, g)
 
 	// Load and compile the source string into bytecode.
 	err := env.LoadString(source)
@@ -112,10 +122,7 @@ func (e *Engine) evaluate(source string) (*graph.DesignGraph, []EvalError, error
 		return nil, evalErrs, nil
 	}
 
-	// No builtins are registered yet, so the graph is always empty.
-	// DSL builtins (board, joint, assembly, etc.) will populate the graph
-	// in a subsequent task.
-	return graph.New(), nil, nil
+	return g, nil, nil
 }
 
 // linePattern matches zygomys error messages that include "Error on line N: ..."
