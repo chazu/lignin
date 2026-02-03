@@ -538,6 +538,13 @@ func registerBuiltins(env *zygo.Zlisp, g *graph.DesignGraph) {
 			}
 			td.Translation = &vec
 		}
+		if v, ok := pa.kw["rotate"]; ok {
+			vec, err := toVec3(v)
+			if err != nil {
+				return zygo.SexpNull, fmt.Errorf("place: rotate: %w", err)
+			}
+			td.Rotation = &vec
+		}
 
 		// Generate a deterministic ID from the child node name.
 		childNode := g.Get(childID)

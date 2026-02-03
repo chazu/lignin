@@ -11,10 +11,12 @@ import type { EditorView } from '@codemirror/view';
 
 const DEFAULT_SOURCE = `;; Open-top box -- 5 boards with butt joints
 ;; Outer: 400 wide x 300 deep x 200 tall (mm)
+;; Board :length/:width/:thickness map to X/Y/Z axes.
 
 (def thickness 19)
 (def oak (material :species "white-oak"))
 
+;; Front and back panels (vertical, facing Z)
 (defpart "front"
   (board :length 400 :width 200 :thickness thickness
          :grain :x :material oak))
@@ -23,16 +25,18 @@ const DEFAULT_SOURCE = `;; Open-top box -- 5 boards with butt joints
   (board :length 400 :width 200 :thickness thickness
          :grain :x :material oak))
 
+;; Side panels (vertical, facing X)
 (defpart "left"
-  (board :length 262 :width 200 :thickness thickness
-         :grain :x :material oak))
+  (board :length thickness :width 200 :thickness 262
+         :grain :z :material oak))
 
 (defpart "right"
-  (board :length 262 :width 200 :thickness thickness
-         :grain :x :material oak))
+  (board :length thickness :width 200 :thickness 262
+         :grain :z :material oak))
 
+;; Bottom panel (horizontal)
 (defpart "bottom"
-  (board :length 362 :width 262 :thickness thickness
+  (board :length 362 :width thickness :thickness 262
          :grain :x :material oak))
 
 (assembly "box"

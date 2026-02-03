@@ -60,7 +60,9 @@ func TestDifference(t *testing.T) {
 		t.Fatalf("ToMesh(box) failed: %v", err)
 	}
 
-	cyl := k.Cylinder(120, 20, 32)
+	// Cylinder is centered at origin; translate it to the center of the box
+	// so it properly intersects for a meaningful difference.
+	cyl := k.Translate(k.Cylinder(120, 20, 32), 50, 50, 50)
 	diff := k.Difference(box, cyl)
 	diffMesh, err := k.ToMesh(diff)
 	if err != nil {
@@ -99,11 +101,11 @@ func TestTranslate(t *testing.T) {
 
 	min, max := translated.BoundingBox()
 
-	// Translated box(10,10,10) by (100,200,300) should be centered at (100,200,300).
-	// So bounds should be approximately (95,195,295) to (105,205,305).
+	// Box(10,10,10) has min-corner at origin, so spans (0,0,0)-(10,10,10).
+	// Translated by (100,200,300) => (100,200,300)-(110,210,310).
 	const tol = 0.5
-	expectMin := [3]float64{95, 195, 295}
-	expectMax := [3]float64{105, 205, 305}
+	expectMin := [3]float64{100, 200, 300}
+	expectMax := [3]float64{110, 210, 310}
 
 	for i := 0; i < 3; i++ {
 		if math.Abs(min[i]-expectMin[i]) > tol {
@@ -120,9 +122,10 @@ func TestBoundingBox(t *testing.T) {
 	box := k.Box(100, 50, 25)
 	min, max := box.BoundingBox()
 
+	// Box now has min-corner at origin: (0,0,0) to (100,50,25).
 	const tol = 0.01
-	expectMin := [3]float64{-50, -25, -12.5}
-	expectMax := [3]float64{50, 25, 12.5}
+	expectMin := [3]float64{0, 0, 0}
+	expectMax := [3]float64{100, 50, 25}
 
 	for i := 0; i < 3; i++ {
 		if math.Abs(min[i]-expectMin[i]) > tol {

@@ -168,8 +168,9 @@ func TestPartWithTransform(t *testing.T) {
 		t.Errorf("expected PartName %q, got %q", "shelf", m.PartName)
 	}
 
-	// Verify that mesh vertices are offset: center of mass should be near (200, 100, 50).
-	// Compute centroid of all vertices.
+	// Verify that mesh vertices are offset. Box has min-corner at origin,
+	// so a 100x50x10 board placed at (200,100,50) spans (200,100,50)-(300,150,60).
+	// Centroid should be near (250, 125, 55).
 	var cx, cy, cz float64
 	n := m.VertexCount()
 	for i := 0; i < n; i++ {
@@ -181,17 +182,16 @@ func TestPartWithTransform(t *testing.T) {
 	cy /= float64(n)
 	cz /= float64(n)
 
-	// The centroid should be approximately at the translation offset.
 	// Use a generous tolerance since marching cubes is approximate.
 	const tol = 20.0
-	if abs(cx-200) > tol {
-		t.Errorf("centroid X = %.1f, expected near 200", cx)
+	if abs(cx-250) > tol {
+		t.Errorf("centroid X = %.1f, expected near 250", cx)
 	}
-	if abs(cy-100) > tol {
-		t.Errorf("centroid Y = %.1f, expected near 100", cy)
+	if abs(cy-125) > tol {
+		t.Errorf("centroid Y = %.1f, expected near 125", cy)
 	}
-	if abs(cz-50) > tol {
-		t.Errorf("centroid Z = %.1f, expected near 50", cz)
+	if abs(cz-55) > tol {
+		t.Errorf("centroid Z = %.1f, expected near 55", cz)
 	}
 }
 

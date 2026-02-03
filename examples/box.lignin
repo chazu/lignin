@@ -1,11 +1,15 @@
 ;; Open-top box -- 5 boards with butt joints and screws
 ;; Outer dimensions: 400 wide x 300 deep x 200 tall (mm)
 ;; Material: 19mm white oak
+;;
+;; Board :length/:width/:thickness map to X/Y/Z axes.
+;; Each board's dimensions match its orientation in the assembly.
 
 (def thickness 19)
 (def oak (material :species "white-oak"))
 
-;; Front and back panels run the full width.
+;; Front and back panels (vertical, facing Z direction).
+;; X = 400 (box width), Y = 200 (box height), Z = 19 (board thickness)
 (defpart "front"
   (board :length 400 :width 200 :thickness thickness
          :grain :x :material oak))
@@ -14,18 +18,20 @@
   (board :length 400 :width 200 :thickness thickness
          :grain :x :material oak))
 
-;; Side panels fit between front and back.
+;; Side panels (vertical, facing X direction).
+;; X = 19 (board thickness), Y = 200 (box height), Z = 262 (inner depth)
 (defpart "left"
-  (board :length 262 :width 200 :thickness thickness
-         :grain :x :material oak))
+  (board :length thickness :width 200 :thickness 262
+         :grain :z :material oak))
 
 (defpart "right"
-  (board :length 262 :width 200 :thickness thickness
-         :grain :x :material oak))
+  (board :length thickness :width 200 :thickness 262
+         :grain :z :material oak))
 
-;; Bottom panel sits inside all four walls.
+;; Bottom panel (horizontal).
+;; X = 362 (inner width), Y = 19 (board thickness), Z = 262 (inner depth)
 (defpart "bottom"
-  (board :length 362 :width 262 :thickness thickness
+  (board :length 362 :width thickness :thickness 262
          :grain :x :material oak))
 
 (assembly "box"

@@ -49,13 +49,18 @@ func wrap(s sdf.SDF3) kernel.Solid {
 	return &sdfxSolid{s: s}
 }
 
-// Box creates a box with the given dimensions.
+// Box creates a box with the given dimensions. The resulting solid has its
+// minimum corner at the origin (0,0,0) so that placement translations work
+// intuitively — (place :at (vec3 10 0 0)) puts the board's corner at x=10.
+// sdf.Box3D centers the box at the origin, so we translate by half-dimensions.
 func (k *SdfxKernel) Box(x, y, z float64) kernel.Solid {
 	s, err := sdf.Box3D(v3.Vec{X: x, Y: y, Z: z}, 0)
 	if err != nil {
 		panic(fmt.Sprintf("sdfx.Box3D: %v", err))
 	}
-	return wrap(s)
+	// Shift from center-origin to min-corner-origin.
+	m := sdf.Translate3d(v3.Vec{X: x / 2, Y: y / 2, Z: z / 2})
+	return wrap(sdf.Transform3D(s, m))
 }
 
 // Cylinder creates a cylinder with the given height and radius.
